@@ -1,4 +1,4 @@
-# CoreCorona simply task to get &Lambda polarization
+# CoreCorona simply task to get $&Lambda$ polarization
 
 This working example, is based on the lego trains introduced by V.Riabov [presentation](https://indico.jinr.ru/event/3391/contributions/18477/attachments/13910/23277/AnalysisFramework_RiabovV.pdf) at MPD Cross-PWG Meeting. It implements the measurement of &Lambda polarization within the core-corona approach.
 
@@ -34,7 +34,7 @@ Process Input File and allow to add task to the analysis
 
 Tasks called by the MpdAnalysis Manager should be derived from MpdAnalysisTask. It consists in two files, its own header (.h) and implementation file (.cxx). In the following lines the basic structure is described.
 
-- ** Constructors and destructors
+- **Constructors and destructors**
 
 It contains the standard  C++ constructors and destructors, called each time an Instance of the class is created or deleted, they are defined in the header file .h
 
@@ -46,22 +46,22 @@ It contains the standard  C++ constructors and destructors, called each time an 
 
 It also implements the following methods that needs to be re-defined in each class
 
-- ** Initialization of objects
+- **Initialization of objects**
 Users should prepare objects to fill (histograms, trees, etc.)
 ```ruby
 	void UserInit();
 ```
-- ** Main - Execution and process of analysis
+- **Main - Execution and process of analysis**
 Method is called for each event, data are provided by container MpdAnalysisEvent
 ```ruby
 	void ProcessEvent(MpdAnalysisEvent &event);
 ```
-- ** End
+- **End**
 Method is called when scan is finished but class data are not written yet
 ```ruby
 	void Finish();
 ```
-- ** Output
+- **Output**
 It define the output file and the objects to be stored in it. In the example is a TList with TH1F and TH2F histograms.
 
 ```ruby
@@ -173,15 +173,36 @@ Is defined in the header file by:
 
 ```ruby
  bool selectTrackpr(MpdTrack *track);
+
+ MpdPid *mPID                  = nullptr ;
  
    TH2F *mhdEdx;
    TH2F *mhdEdxAss;
    TH2F *mhdEdxvsmass2;
    TH2F *mhdEdxvsmass2Ass;
 ```
-It plots PID histograms, as is shown in the figures for p and &pi<sup>-</sup> 
-<image 
-src="/figures/protondedx.jpg" src="/figures/piondedx.jpg" alt="Energy loss proton and pion">
+
+It plots PID histograms, as is shown in the figures for p 
+
+<image src="/figures/protondedx.jpg" alt="Energy loss proton">
+
+and &pi<sup>-</sup> 
+
+<image src="/figures/piondedx.jpg" alt="Energy loss pion">
+
+to select protons we choose a positive value for the charge and negative for pions
+
+```ruby
+      isGoodPID = mPID->FillProbs(TMath::Abs(pt)*TMath::CosH(eta),track->GetdEdXTPC()*6.036e-3,track->GetTofMass2(),-1);
+```
+besides we ask that the probability to be a pion or a proton be hiagher than an certain value
+
+```ruby
+      if (isGoodPID && (mPID->GetProbPi() < 0.75)) {
+	      return false;
+      }
+```
+the full implementation of the memebar class is in the following lines for the proton case.
 
 
 <details>
@@ -235,28 +256,64 @@ return false;
 ```
 </details>
 
+to improve selection at low momentum, classes at pairKK and photon directories uses additonal functions 
+
+```ruby
+   float dEdx_sigma_K(float dEdx, float mom) const;
+
+   float Beta_sigma_K(float beta, float mom) const;
+```
 
 
-
-
-
-
-
-________________________________________________
-MpdPID is initialized in the member class **ProcessEvent** with
-
-To select the events, this function is called in the member class **ProcessEvent** with:
+### Initialize classes 
+To select the events and tracks the functions selectTrack and selectEvent should be called in the **ProcessEvent** member class as
 
 ```ruby
 if(!selectEvent(event)){
    return;
    }
-```
-```ruby
+
 if (!isInitialized) {
       mPID          = new MpdPid(2.0, 2.0, 9.2, 1.0, "NSIG", "CFHM", "pikapr");
       isInitialized = true;
    }
+```
+Additional methods to V0 reconstruction should be initialized toguether with MpdPid class, MpdKalmanFilter and MpdKalmanHit in the .h file
+
+```ruby
+   MpdKalmanFilter* mKF          = nullptr ;
+   MpdKalmanHit mKHit;
+```
+and in the .cxx file 
+
+```ruby
+      mKF = MpdKalmanFilter::Instance();
+      mKHit.SetType(MpdKalmanHit::kFixedR);
+```
+
+### Define histograms
+
+The histograms, declared in the header file, are defined in the UserInit() member class. They are added to TList as is shown in the following lines for a few of them as an example
+
+
+```ruby
+void MpdV0AnalysisTask::UserInit()
+{
+	fOutputList = new TList();
+	fOutputList->SetOwner(kTRUE);
+
+	TH1::AddDirectory(kFALSE);
+
+	   // General QA
+   mhEvents = new TH1F("hEvents", "Number of events", 10, 0., 10.);
+   fOutputList->Add(mhEvents);
+   mhVertex = new TH1F("hVertex", "Event vertex distribution", 100, -200., 200.);
+   fOutputList->Add(mhVertex);
+   mhCentrality = new TH1F("hCentrality", "Centrality distribution", 100, 0., 100.);
+   fOutputList->Add(mhCentrality);
+   mhMultiplicity = new TH1F("hMultiplicity", "Multiplicity distribution", 2000, -0.5, 1999.5);
+   fOutputList->Add(mhMultiplicity);
+}
 ```
 
  
