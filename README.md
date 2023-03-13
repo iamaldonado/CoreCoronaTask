@@ -105,7 +105,7 @@ private:
 
 ```
 
-The implementation is given in the file .cxx by the following lines:
+The function is defined in the file .cxx by the following lines:
 
 
 ````md
