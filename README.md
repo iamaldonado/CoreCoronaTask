@@ -6,7 +6,7 @@ It employs the classes MpdAnalysisManager, MpdAnalysisEvent, and MpdAnalysisTask
 
 ## MpdAnalysisEvent Class
 
-Contains references to all branches in the DST file for this event and may contain extra global variables of interest (centrality, event plane, T_0, n-sigma matching ... etc.). In the actual version reads
+Contains references to all branches in the DST file for this event and may contain extra global variables of interest (centrality, event plane, T<sub>0</sub>, n-sigma matching ... etc.). In the actual version reads
 
 ```ruby
 EventHeader
@@ -71,11 +71,14 @@ It define the output file and the objects to be stored in it. In the example is 
 ```
 ## Common methods for the different examples (pairKK, photons)
 
-We implement the common functions to select only events and tracks that satisfy certain parameters: z vertex position, &eta, p_{T}, number of hits, PID, ...
+We implement the common functions to select only events and tracks that satisfy certain parameters: z vertex position, &eta, p<sub>T</sub>, number of hits, PID, ...
 
-### selectEvent
+### bool selectEvent(MpdAnalysisEvent &event)
 
 Is defined in the event header as a protected member class, it plot histograms like multiplicity and z vertex position that should be defined also in the header file as is shown in the following lines
+
+<details>
+<summary>Click me</summary>
 
 ```ruby
 protected:
@@ -102,10 +105,10 @@ private:
    TH1F *mhVertex       = nullptr;
    TH1F *mhCentrality   = nullptr;
    TH1F *mhMultiplicity = nullptr;
-
 ```
+</details>
 
-The function is defined in the file .cxx by the following lines:
+The Implementation is written in file .cxx after finish() method:
 
 
 <details>
@@ -162,13 +165,97 @@ bool MpdV0AnalysisTask::selectEvent(MpdAnalysisEvent &event)
 ```
 </details>
 
+
+### bool selectTrack(MpdTrack &track)
+
+It select events that pass cuts on |&eta|, p<sub>T</sub>, nhits and dca and applies PID selection with [MpdPID](https://git.jinr.ru/nica/mpdroot/-/tree/dev/core/mpdPid) class. 
+Is defined in the header file by:
+
+```ruby
+ bool selectTrackpr(MpdTrack *track);
+ 
+   TH2F *mhdEdx;
+   TH2F *mhdEdxAss;
+   TH2F *mhdEdxvsmass2;
+   TH2F *mhdEdxvsmass2Ass;
+```
+It plots PID histograms, as is shown in the figures for p and &pi<sup>-</sup> 
+<image src="/figures/protondedx.jpg" alt="Energy loss proton">
+
+
+<details>
+<summary>Click me</summary>
+
+```ruby
+bool MpdV0AnalysisTask::selectTrackpr(MpdTrack *track)
+{
+
+	 Double_t pt  = track->GetPt();
+         Double_t eta = track->GetEta();
+         Int_t nhits  = track->GetNofHits();
+
+	 if(pt > 0 ) return false; // reject negative charge
+
+      if (TMath::Abs(pt) < cut_pt) return false;
+      if (TMath::Abs(eta) > cut_eta) return false;
+      if (nhits < cut_nhits) return false;
+
+      bool isGoodPID;
+      if (track->GetTofFlag()== 2 || track->GetTofFlag()==6){
+      isGoodPID = mPID->FillProbs(TMath::Abs(pt)*TMath::CosH(eta),track->GetdEdXTPC()*6.036e-3,track->GetTofMass2(),1);
+      } else {
+      isGoodPID = mPID->FillProbs(TMath::Abs(pt)*TMath::CosH(eta),track->GetdEdXTPC()*6.036e-3,1);
+      }
+      if (isGoodPID && (mPID->GetProbPr() < 0.75)) {
+	      return false;
+      }
+      float dEdx = track->GetdEdXTPC();
+      float tofmass2=track->GetTofMass2();
+      mhdEdx->Fill(TMath::Abs(pt)*TMath::CosH(eta), dEdx); // | p | = p_T cosh(η)
+      mhdEdxvsmass2->Fill(track->GetTofMass2(), dEdx);
+      long int prim1 = track->GetID();
+      if (
+		      (abs((static_cast<MpdMCTrack *>(fTMCTracks->At(prim1)))->GetPdgCode()) == 2212)		      
+		      ){
+	      mhdEdxvsmass2Ass->Fill(track->GetTofMass2(),dEdx);
+      	      mhdEdxAss->Fill(TMath::Abs(pt)*TMath::CosH(eta),dEdx);// | p | = p_T cosh(η)
+      }
+
+      if(tofmass2 > 0.046722 && tofmass2 < 1.22858 && // gaussianfit +4sigma at low dedx; previous values // (0.6804,1.0793)
+        (track->GetTofFlag() == 2 || track->GetTofFlag() == 6)
+		      ){
+	      return true;
+      }else {
+              return false;
+      }
+
+return false;
+}
+```
+</details>
+
+
+
+
+
+
+
+
+________________________________________________
+MpdPID is initialized in the member class **ProcessEvent** with
+
 To select the events, this function is called in the member class **ProcessEvent** with:
 
 ```ruby
 if(!selectEvent(event)){
    return;
    }
-
+```
+```ruby
+if (!isInitialized) {
+      mPID          = new MpdPid(2.0, 2.0, 9.2, 1.0, "NSIG", "CFHM", "pikapr");
+      isInitialized = true;
+   }
 ```
 
  
