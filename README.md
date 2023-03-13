@@ -108,9 +108,8 @@ private:
 The function is defined in the file .cxx by the following lines:
 
 
-````md
 <details>
-<summary>CLick me</summary>
+<summary>Click me</summary>
 
 ```ruby
 bool MpdV0AnalysisTask::selectEvent(MpdAnalysisEvent &event)
