@@ -180,7 +180,8 @@ Is defined in the header file by:
    TH2F *mhdEdxvsmass2Ass;
 ```
 It plots PID histograms, as is shown in the figures for p and &pi<sup>-</sup> 
-<image src="/figures/protondedx.jpg" alt="Energy loss proton">
+<image 
+src="/figures/protondedx.jpg" src="/figures/piondedx.jpg" alt="Energy loss proton and pion">
 
 
 <details>
