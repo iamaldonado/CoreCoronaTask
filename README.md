@@ -1,4 +1,4 @@
-# CoreCorona simply task to get $&Lambda$ polarization
+# CoreCorona simply task to get &Lambda polarization
 
 This working example, is based on the lego trains introduced by V.Riabov [presentation](https://indico.jinr.ru/event/3391/contributions/18477/attachments/13910/23277/AnalysisFramework_RiabovV.pdf) at MPD Cross-PWG Meeting. It implements the measurement of &Lambda polarization within the core-corona approach.
 
