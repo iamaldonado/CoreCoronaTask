@@ -62,6 +62,8 @@ Double_t n2pi = 2*TMath::Pi();
 
 	fhCentvsB = new TProfile("hCentvsB","hCentvsB",10,0,100,0,20);
 	fOutputList->Add(fhCentvsB);
+	fhCentvsBbis = new TProfile("hCentvsBbis","hCentvsB",10,0,100,0,20); //histogram to compare ouptut with lego train
+	fOutputList->Add(fhCentvsBbis);
 
         fhArmPodMC = new TH2F("hArmPodMC","hArmPodMC; #alpha; p_{T}",100,-1.0,1.0,100,0,0.25);
 	fOutputList->Add(fhArmPodMC);
@@ -125,8 +127,14 @@ Double_t n2pi = 2*TMath::Pi();
         fhistPsiRecvsPsiMC = new TH2F("histEPrecvsEPmc","EP_{rec} vs EP_{MC},#Psi_{rec};#Psi_{MC}",100,0,n2pi,100,0,n2pi);
 	fOutputList->Add(fhistPsiRecvsPsiMC);
 
+	fhistPsiRecvsPsiMCbis = new TH2F("histEPrecvsEPmcbis","EP_{rec} vs EP_{MC},#Psi_{rec};#Psi_{MC}",100,0,n2pi,100,0,n2pi);// histogram to compare with lego train
+	fOutputList->Add(fhistPsiRecvsPsiMCbis); 
+
 	fhResolutionEP = new TProfile("hResolutionEP","hResolutionEP;centrality;Resolution",10,0,100,-2,2);
 	fOutputList->Add(fhResolutionEP);
+
+	fhResolutionEPbis = new TProfile("hResolutionEPbis","hResolutionEPbis;centrality;Resolution",10,0,100,-2,2); //histogram to compare with lego train
+	fOutputList->Add(fhResolutionEPbis);
 	//
 	mhdEdx = new TH2F("hdEdx", "dEdx", 200, 0, 5., 1000, 0, 1000);
         fOutputList->Add(mhdEdx);
@@ -300,6 +308,7 @@ void MpdV0AnalysisTask::ProcessEvent(MpdAnalysisEvent &event)
 
  Double_t PsizdcEP=-99.0;
 
+ Double_t EPtrain = event.fMpdEP.GetPhiEP_FHCal_F_all() + TMath::Pi();
 
  MCHeader = event.fMCEventHeader;
  impb = MCHeader->GetB();
@@ -320,17 +329,22 @@ void MpdV0AnalysisTask::ProcessEvent(MpdAnalysisEvent &event)
  Int_t index_cent= -99;
  index_cent = GetCentClass(multiplicity);
 
- Double_t centrality = 10*index_cent + 5;
+ Double_t centrality = 10*anaBin + 5; // could be cen directly
+ Double_t centrality2 = 10*index_cent + 5;
 
  fhCentvsB->Fill(centrality,impb);
+ fhCentvsBbis->Fill(centrality2,impb);
 
  PsizdcEP = EventPlaneZDC(event);
  
  Double_t reszdc = TMath::Cos(PsizdcEP - PsiEP);
+ Double_t restrain = TMath::Cos(EPtrain - PsiEP);
 
- fhResolutionEP->Fill(centrality,reszdc);
- fhistPsiRecvsPsiMC->Fill(PsizdcEP,PsiEP);
+ fhResolutionEP->Fill(centrality,restrain);
+ fhistPsiRecvsPsiMC->Fill(EPtrain,PsiEP);
 
+ fhResolutionEPbis->Fill(centrality2,reszdc);
+ fhistPsiRecvsPsiMCbis->Fill(PsizdcEP,PsiEP);
 
 
  //cout << "N of MC tracks = " << nmctracks << endl;
@@ -411,45 +425,45 @@ void MpdV0AnalysisTask::ProcessEvent(MpdAnalysisEvent &event)
       //Double_t weight_pol = 0.4; // if UrQMD data
 
 	      if(mompdg == 3122){
-	      	fhPolarization[0][0][index_cent]->Fill(weight_pol*PolL.X());
-	      	fhPolarization[0][1][index_cent]->Fill(weight_pol*PolL.Y());
-	      	fhPolarization[0][2][index_cent]->Fill(weight_pol*PolL.Z());
-	      	if(PolL.Mag()!=0.)fhProjection[0][0][index_cent]->Fill(adPL);
-	      	fhProjection[0][1][index_cent]->Fill(adnL);
-	      	fhProjection[0][2][index_cent]->Fill(admL);
-		fhDeltaPhi[0][index_cent]->Fill(GetDeltaPhi(HypL,PosL,mL));
+	      	fhPolarization[0][0][anaBin]->Fill(weight_pol*PolL.X());
+	      	fhPolarization[0][1][anaBin]->Fill(weight_pol*PolL.Y());
+	      	fhPolarization[0][2][anaBin]->Fill(weight_pol*PolL.Z());
+	      	if(PolL.Mag()!=0.)fhProjection[0][0][anaBin]->Fill(adPL);
+	      	fhProjection[0][1][anaBin]->Fill(adnL);
+	      	fhProjection[0][2][anaBin]->Fill(admL);
+		fhDeltaPhi[0][anaBin]->Fill(GetDeltaPhi(HypL,PosL,mL));
 		if( 
 				(etamc < cut_eta) && (etamcn < cut_eta) && (ptmc > cut_pt) && (ptmcn > cut_pt)
 				){
-	      		fhPolarizationcut[0][0][index_cent]->Fill(weight_pol*PolL.X());
-	      		fhPolarizationcut[0][1][index_cent]->Fill(weight_pol*PolL.Y());
-	      		fhPolarizationcut[0][2][index_cent]->Fill(weight_pol*PolL.Z());
-	      		if(PolL.Mag()!=0.)fhProjectioncut[0][0][index_cent]->Fill(adPL);
-	      		fhProjectioncut[0][1][index_cent]->Fill(adnL);
-	      		fhProjectioncut[0][2][index_cent]->Fill(admL);
-			fhDeltaPhicut[0][index_cent]->Fill(GetDeltaPhi(HypL,PosL,mL));
+	      		fhPolarizationcut[0][0][anaBin]->Fill(weight_pol*PolL.X());
+	      		fhPolarizationcut[0][1][anaBin]->Fill(weight_pol*PolL.Y());
+	      		fhPolarizationcut[0][2][anaBin]->Fill(weight_pol*PolL.Z());
+	      		if(PolL.Mag()!=0.)fhProjectioncut[0][0][anaBin]->Fill(adPL);
+	      		fhProjectioncut[0][1][anaBin]->Fill(adnL);
+	      		fhProjectioncut[0][2][anaBin]->Fill(admL);
+			fhDeltaPhicut[0][anaBin]->Fill(GetDeltaPhi(HypL,PosL,mL));
                         hMassV0MCcut[0]->Fill(laInvmass);
                         fhArmPodMCcut->Fill(alpha, ptarm);
 		}
 	      }
 	      if(mompdg == -3122){
-	      	fhPolarization[1][0][index_cent]->Fill(weight_pol*PolL.X());
-	      	fhPolarization[1][1][index_cent]->Fill(weight_pol*PolL.Y());
-	      	fhPolarization[1][2][index_cent]->Fill(weight_pol*PolL.Z());
-	      	if(PolL.Mag()!=0.)fhProjection[1][0][index_cent]->Fill(adPL);
-	      	fhProjection[1][1][index_cent]->Fill(adnL);
-	      	fhProjection[1][2][index_cent]->Fill(admL);
-		fhDeltaPhi[1][index_cent]->Fill(GetDeltaPhi(HypL,PosL,mL));
+	      	fhPolarization[1][0][anaBin]->Fill(weight_pol*PolL.X());
+	      	fhPolarization[1][1][anaBin]->Fill(weight_pol*PolL.Y());
+	      	fhPolarization[1][2][anaBin]->Fill(weight_pol*PolL.Z());
+	      	if(PolL.Mag()!=0.)fhProjection[1][0][anaBin]->Fill(adPL);
+	      	fhProjection[1][1][anaBin]->Fill(adnL);
+	      	fhProjection[1][2][anaBin]->Fill(admL);
+		fhDeltaPhi[1][anaBin]->Fill(GetDeltaPhi(HypL,PosL,mL));
 		if(
 				(etamc < cut_eta) && (etamcn < cut_eta) && (ptmc > cut_pt) && (ptmcn > cut_pt)
 				){
-	      		fhPolarizationcut[1][0][index_cent]->Fill(weight_pol*PolL.X());
-	      		fhPolarizationcut[1][1][index_cent]->Fill(weight_pol*PolL.Y());
-	      		fhPolarizationcut[1][2][index_cent]->Fill(weight_pol*PolL.Z());
-	      		if(PolL.Mag()!=0.)fhProjectioncut[1][0][index_cent]->Fill(adPL);
-	      		fhProjectioncut[1][1][index_cent]->Fill(adnL);
-	      		fhProjectioncut[1][2][index_cent]->Fill(admL);
-			fhDeltaPhicut[1][index_cent]->Fill(GetDeltaPhi(HypL,PosL,mL));
+	      		fhPolarizationcut[1][0][anaBin]->Fill(weight_pol*PolL.X());
+	      		fhPolarizationcut[1][1][anaBin]->Fill(weight_pol*PolL.Y());
+	      		fhPolarizationcut[1][2][anaBin]->Fill(weight_pol*PolL.Z());
+	      		if(PolL.Mag()!=0.)fhProjectioncut[1][0][anaBin]->Fill(adPL);
+	      		fhProjectioncut[1][1][anaBin]->Fill(adnL);
+	      		fhProjectioncut[1][2][anaBin]->Fill(admL);
+			fhDeltaPhicut[1][anaBin]->Fill(GetDeltaPhi(HypL,PosL,mL));
                         hMassV0MC[1]->Fill(laInvmass);
                         fhArmPodMCcut->Fill(alpha, ptarm);
 		}
@@ -670,7 +684,8 @@ Double_t EnLa=TMath::Sqrt(PLa.Mag2() + 1.245456);
 TLorentzVector LambdaLV(PLa,EnLa);
 TLorentzVector ProtonLV(Pmpos,Enpos);
 TVector3 mL(TMath::Sin(PsiEP),-TMath::Cos(PsiEP),0);
-TVector3 mLR(TMath::Sin(PsizdcEP),-TMath::Cos(PsizdcEP),0); 
+TVector3 mLR(TMath::Sin(EPtrain),-TMath::Cos(EPtrain),0); 
+//TVector3 mLR(TMath::Sin(PsizdcEP),-TMath::Cos(PsizdcEP),0); 
 Double_t ptLam=TMath::Sqrt(PLa.X()*PLa.X() + PLa.Y()*PLa.Y());
 TVector3 nL(-PLa.Y()/ptLam,PLa.X()/ptLam,0);
 
@@ -707,11 +722,11 @@ if(
       fhDCAposInvMass->Fill(laInvmass,dcapos);
       fhDCAnegInvMass->Fill(laInvmass,dcaneg);
       fhDecayctau->Fill(decay,ctau);
-		fhDeltaPhiRec[0][index_cent]->Fill(deltaphipr);
-		fhDeltaPsiRec[0][index_cent]->Fill(deltapsipr);
+		fhDeltaPhiRec[0][anaBin]->Fill(deltaphipr);
+		fhDeltaPsiRec[0][anaBin]->Fill(deltapsipr);
 		fhDeltaPhiRecLa->Fill(deltaphipr);
-		fhProjLocRec[0][index_cent]->Fill(adnL);
-		fhProjPsiRec[0][index_cent]->Fill(admLrec);
+		fhProjLocRec[0][anaBin]->Fill(adnL);
+		fhProjPsiRec[0][anaBin]->Fill(admLrec);
 		fhProjLocRecLa->Fill(adnL);
 	}
       }//cut on dcabetweenV0
@@ -741,11 +756,11 @@ if(
       fhDCAnegInvMassAss->Fill(laInvmass,dcaneg);
       fhDecayctauAss->Fill(decay,ctau);
       fhtest2->Fill(admLrec);
-		fhDeltaPhiAss[0][index_cent]->Fill(deltaphipr);
-		fhDeltaPsiAss[0][index_cent]->Fill(deltapsipr);
+		fhDeltaPhiAss[0][anaBin]->Fill(deltaphipr);
+		fhDeltaPsiAss[0][anaBin]->Fill(deltapsipr);
 		fhDeltaPhiAssLa->Fill(deltaphipr);
-		fhProjLocAss[0][index_cent]->Fill(adnL);
-		fhProjPsiAss[0][index_cent]->Fill(admLrec);
+		fhProjLocAss[0][anaBin]->Fill(adnL);
+		fhProjPsiAss[0][anaBin]->Fill(admLrec);
 		fhProjLocAssLa->Fill(adnL);
 
   fhchi2LaAss->Fill(chi2La);
@@ -770,23 +785,46 @@ bool MpdV0AnalysisTask::selectEvent(MpdAnalysisEvent &event)
    if (!event.fVertex) { // if even vertex not filled, skip event
       return false;
    }
+
+   mhEvents->Fill(1.5);
+
    // Vertex z coordinate
+
    MpdVertex *vertex = (MpdVertex *)event.fVertex->First();
    vertex->Position(mPrimaryVertex);
+
    mhVertex->Fill(mPrimaryVertex.Z());
-   float mZvtxCut = 50.;//vertex cut to be implemented in add class
-   if (fabs(mPrimaryVertex.Z()) > mZvtxCut) { 
+
+   if (mPrimaryVertex.Z() == 0) { // not reconstructed (==0)
       return false;
    }
+
+
+   float mZvtxCut = 50.;//vertex cut to be implemented in add class
+   if (fabs(mPrimaryVertex.Z()) > mZvtxCut) { //beyonf the limits
+      return false;
+   }
+   mhEvents->Fill(2.5);
+
+   cen = event.getCentrTPC();
+
+   if (cen < 0 || cen >= 100) { // TPC centrality not defined
+      return false;
+   }
+
+   mhEvents->Fill(3.5);
+
    mZvtxBin = 0.5 * (mPrimaryVertex.Z() / mZvtxCut + 1) * nMixEventZ;
    if (mZvtxBin < 0) mZvtxBin = 0;
    if (mZvtxBin >= nMixEventZ) mZvtxBin = nMixEventZ - 1;
-   mhEvents->Fill(1.5);
+ //  mhEvents->Fill(1.5);
 
-   float cen = event.getCentrTPC();
+ //  float cen = event.getCentrTPC();
    mCenBin   = (cen / 100.) * nMixEventCent; // very rough
    if (mCenBin < 0) mCenBin = 0;
    if (mCenBin >= nMixEventCent) mCenBin = nMixEventCent - 1;
+
+   mixBin = mZvtxBin * nMixEventCent + mCenBin;
 
    // Multiplicity
    fTMpdGlobalTracks = event.fMPDEvent->GetGlobalTracks();
@@ -794,19 +832,19 @@ bool MpdV0AnalysisTask::selectEvent(MpdAnalysisEvent &event)
    mhMultiplicity->Fill(ntr);
 
    // Centrality
-   mhCentrality->Fill(mCenBin);
-   // mCenBin = 0;
-   mhEvents->Fill(2.5);
+   mhCentrality->Fill(cen);
 
-   // ZCD vs TPC (pileup?)
-   mhEvents->Fill(3.5);
-
-   // Eventplane  TODO
-   mRPBin = 0;
-   mhEvents->Fill(4.5);
-
-   mixBin = (mCenBin + 1) * (mZvtxBin + 1) * (mRPBin + 1);
-   // cout<<"Mixing bin: "<<mixBin<<" = "<<mCenBin<<" "<<mZvtxBin<<" "<<mRPBin<<endl;
+   anaBin = -1;
+   if (cen >= 0 && cen < 10) anaBin = 0;
+   if (cen >= 10 && cen < 20) anaBin = 1;
+   if (cen >= 20 && cen < 30) anaBin = 2;
+   if (cen >= 30 && cen < 40) anaBin = 3;
+   if (cen >= 40 && cen < 50) anaBin = 4;
+   if (cen >= 50 && cen < 60) anaBin = 5;
+   if (cen >= 60 && cen < 70) anaBin = 6;
+   if (cen >= 70 && cen < 80) anaBin = 7;
+   if (cen >= 80 && cen < 90) anaBin = 8;
+   if (cen >= 90 && cen < 100) anaBin = 9;
 
    return true;
 }

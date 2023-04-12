@@ -1,7 +1,20 @@
-void RunAnalyses(){
+//         Funtion to check centrality files
+//__________________________________________________________________
+bool CheckFileExist(TString fileName){
+    gSystem->ExpandPathName(fileName);
+    if (gSystem->AccessPathName(fileName.Data()) == true)
+    {
+        cout<<endl<<"no specified file: "<<fileName<<endl;
+        return false;
+    }                
 
-  gROOT->LoadMacro("mpdloadlibs.C"); // looks unnecessary, but it is to load at list MpdParticle
-  gROOT->ProcessLine("mpdloadlibs()");
+    return true;
+}
+//____________________________________________________________________
+void RunAnalyses(int nEvents = -1, TString inFileList = "list10.txt"){
+
+  gROOT->LoadMacro("mpdloadlibs.C"); // 
+  gROOT->ProcessLine("mpdloadlibs()"); // you can add here the functions directly as appear in mpdloadlibs file
 
   TStopwatch timer;
   timer.Start();
@@ -9,27 +22,19 @@ void RunAnalyses(){
   ProcInfo_t proc;
   MemInfo_t memory;
 
-   MpdAnalysisManager man("ManagerAnal") ;
- //man.InputFileList("list.txt") ;
-// man.InputFileList("onefile.txt") ;
-man.InputFileList("listshort.txt") ;
-   man.ReadBranches("*") ; 
-   man.SetOutput("histos.root") ;
+   MpdAnalysisManager man("ManagerAnal", nEvents) ;
+if (!CheckFileExist(inFileList)) return;
+	man.InputFileList(inFileList) ;
+   	man.ReadBranches("*") ; 
+   	man.SetOutput("histos.root") ;
    
-   MpdCentralityAll pCentr("pCentr","pCentr") ;
-   man.AddTask(&pCentr) ;
+  	MpdCentralityAll pCentr("pCentr","pCentra") ;
+   	man.AddTask(&pCentr) ;
    
-   MpdConvPi0 pDef("pi0Def","ConvDef") ; //name, parametes file
-   man.AddTask(&pDef) ;
+   MpdEventPlaneAll pEP("pEP","pEPa") ;
+   man.AddTask(&pEP) ;
 
-   MpdPairKK pKK("pKK","pKK") ;
-   man.AddTask(&pKK) ;
-
-
-   MpdEPAnalysisTask MpdEPAnalysisTask("EP","EP") ;
-   man.AddTask(&MpdEPAnalysisTask) ;
-
-   MpdV0AnalysisTask MpdV0AnalysisTask("V0","V0") ;
+   MpdV0AnalysisTask MpdV0AnalysisTask("V0","V0a") ;
    man.AddTask(&MpdV0AnalysisTask) ;
 
    man.Process() ;
@@ -46,8 +51,8 @@ man.InputFileList("listshort.txt") ;
    printf("RealTime=%f seconds, CpuTime=%f seconds\n", rtime, ctime);
    cout << "Macro finished successfully." << endl;
 
-ofstream myfile;
-myfile.open("info.txt");
+ofstream myfile;//file that stores time and memory consumption you can comment
+myfile.open("/scratch1/maldonado/test/info.txt");
 myfile<< "Time and memory usage" << "\n";
 
   myfile << " User CPU time: " << proc.fCpuUser << "seconds, Memory: resident " << proc.fMemResident << "KB, virtual " << proc.fMemVirtual << "KB"<< "\n";

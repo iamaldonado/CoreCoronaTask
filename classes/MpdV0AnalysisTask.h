@@ -51,6 +51,9 @@ protected:
 private:
 
    // event properties
+   float cen;
+   int   anaBin;
+
    bool     isInitialized = false;
    int      mCenBin       = 0;
    int      mZvtxBin      = 0;
@@ -116,6 +119,7 @@ private:
    TH2F *fhBvsRefMultMC;
 
    TProfile *fhCentvsB;
+   TProfile *fhCentvsBbis;
 
    TH2F *fhArmPodMC;
    TH2F *fhArmPodMCcut;
@@ -160,6 +164,8 @@ private:
 
    TH2F *fhistPsiRecvsPsiMC;
    TProfile *fhResolutionEP;
+   TH2F *fhistPsiRecvsPsiMCbis;
+   TProfile *fhResolutionEPbis;
 
 
 

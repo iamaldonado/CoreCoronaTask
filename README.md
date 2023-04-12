@@ -316,15 +316,24 @@ void MpdV0AnalysisTask::UserInit()
 }
 ```
 
- 
+# RunAnalysis.C macro
 
+The macros call the different analysis trains. 
 
+## Centrality train
 
+Notice that in case you want to call the Centrality train you should have in your directory the calibration file of MC generator used and the parameters file pCentr.txt.
+Available files are:
 
+-  nTr\_Centr\_Req25-UrQMD.root
+-  nTr\_Centr\_Req26-DCM-QGSM-SMM.root
+-  nTr\_Centr\_Req27-Req29-PHQMD.root
+-  nTr\_Centr\_Req30-PHSD.root
 
+and Input file file with track reconstruction centralities
 
+-  TrackRecEff.root
 
-
-
- 
+## Event Plane train
+You require in the same folder the parameters file pEP.txt and the file pEpQa.root
 
